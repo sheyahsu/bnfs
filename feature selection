@@ -1,1 +1,64 @@
+import pandas as pd
+import shap
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from xgboost import XGBClassifier
 
+# Random Forest classifier with grid search
+def random_forest_classification(x_train, y_train):
+    params = {
+        'n_estimators': [10, 20, 30, 50],
+        'max_depth': [3],
+        'min_samples_split': [2]
+    }
+    grid_search = GridSearchCV(
+        estimator=RandomForestClassifier(),
+        param_grid=params,
+        cv=5,
+        n_jobs=-1,
+        return_train_score=True
+    )
+    grid_search.fit(x_train, y_train)
+    return grid_search.best_estimator_
+
+# XGBoost classifier with grid search and SHAP value computation
+def XGBoost_classification(x_train, y_train):
+    params = {
+        'n_estimators': [10, 20, 30, 40, 50],
+        'max_depth': [2, 3, 4],
+        'min_child_weight': [1, 2, 3]
+    }
+    model = XGBClassifier(objective='binary:logistic', importance_type='gain')
+    grid_search = GridSearchCV(
+        estimator=model,
+        param_grid=params,
+        cv=3,
+        n_jobs=-1,
+        return_train_score=True
+    )
+    grid_search.fit(x_train, y_train)
+    explainer = shap.Explainer(grid_search.best_estimator_)
+    shap_values = explainer(x_train)
+    return grid_search.best_estimator_, shap_values
+
+# Get gene names
+genes = list(Genes.__members__.keys())
+
+# Compute feature importance using Random Forest
+df = pd.DataFrame()
+for g, (X, y) in enumerate(training_set_list):
+    print('Target:', Genes(g))
+    rf = random_forest_classification(X, y)
+    imp = obtain_feature_importances(rf, genes)
+    df[Genes(g).name] = imp
+df.to_csv('importance_data(random forest).csv')
+
+# Compute feature importance using XGBoost
+df = pd.DataFrame()
+for g, (X, y) in enumerate(training_set_list):
+    print('Target:', Genes(g))
+    xgb, shap_values = XGBoost_classification(X, y)
+    print('Feature importance:')
+    imp = obtain_feature_importances(xgb, genes)
+    df[Genes(g).name] = imp
+df.to_csv('importance_data(xgboost).csv')
