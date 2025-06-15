@@ -89,28 +89,22 @@ def lwij(m, n):
             W[i * n + j, j * m + i] = 1
     return W
 
-# Test which genes regulate S1P (first node)
-M1 = M_matrices[0]  # M for S1P
-print("Testing regulatory factors for: S1P")
+# Test which genes regulate Cell5
+M5 = M_matrices[4]  # M for Cell5
 
-for i, name in enumerate(["S1P", "FLIP", "Fas", "Ceramide", "DISC", "Apoptosis"]):
+for i, name in enumerate(["Cell1", "Cell2", "Cell3", "Cell4", "Cell5"]):
     W = lwij(2, 2 ** i)
     P = sp(sp(M1, W), Mn - I2)
     is_zero = np.all(P == 0)
     print(f"{name}:", is_zero)
 
-# -----------------------------
-# Step 6: Fix some variable inputs and evaluate control output
-# Example: Ceramide = 0, Apoptosis = 0, x1–x4 = 1
-# -----------------------------
-Mp = sp(M1, lwij(2, 16))  # Rearrangement for Ceramide (x5)
-Mp = sp(Mp, delta_1)      # Ceramide = 0
-Mp = sp(Mp, delta_1)      # x1 = 0
-Mp = sp(Mp, delta_1)      # x2 = 0
-Mp = sp(Mp, delta_1)      # x3 = 0
-Mp = sp(Mp, delta_1)      # x4 = 0
-Mp = sp(Mp, delta_1)      # Apoptosis = 0
-
-print("\nFinal result for S1P when Ceramide = 0, Apoptosis = 0:")
+'''
+    Cell5 ：Cell1、Cell2
+x5(t+1) =M5·x1(t)·x2(t)·x3(t)·x4(t)·x5(t)
+        =M1·W[8,4]·x3(t)·x4(t)·x5(t)·x1(t)·x2(t)
+'''
+Mp = sp(sp(sp(sp(M1, lwij(8,4)), np.array([[1], [0]])), np.array([[1], [0]])), np.array([[1], [0]]))
+print('target cell: Cell5')
+print('regulators: Cell1、Cell2')
 print(Mp)
 print('------------------------')
